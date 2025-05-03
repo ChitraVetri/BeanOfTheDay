@@ -1,46 +1,31 @@
-import * as model from '../models/beanModel.js';
+const beanService = require('../services/beanService');
 
-export const getBeans = async (req, res) => {
-    try {
-        const beans = await model.getAllBeans();
-        res.json(beans);
-    } catch (err) {
-        res.status(500).json(err.message)
-    }
+exports.getAllBeans = async (req, res) => {
+  try {
+    const beans = await beanService.getAllBeans();
+    res.json(beans);
+  } catch (err) {
+    console.error('Error in getAllBeans:', err);
+    res.status(500).json({ error: 'Failed to fetch beans.' });
+  }
 };
 
-export const getBean = async (req, res) => {
-    try {
-        const bean = await model.getBeanById(req.params.id);
-        res.json(bean);
-    } catch (err) {
-        res.status(500).json(err.message)
-    }
+exports.getBeanOfTheDay = async (req, res) => {
+  try {
+    const bean = await beanService.getBeanOfTheDay();
+    res.json(bean);
+  } catch (err) {
+    console.error('Error in getBeanOfTheDay:', err);
+    res.status(500).json({ error: 'Failed to get Bean of the Day.' });
+  }
 };
 
-export const addBean = async (req, res) => {
-    try {
-        const bean = await model.createBean(req.body);
-        res.status(201).json(bean);
-    } catch (err) {
-        res.status(500).json(err.message)
-    }
-};
-
-export const modifyBean = async (req, res) => {
-    try {
-        const updated = await model.updateBean(req.params.id, req.body);
-        res.json(updated);
-    } catch (err) {
-        res.status(500).json(err.message)
-    }
-};
-
-export const removeBean = async (req, res) => {
-    try {
-        await model.deleteBean(req.params.id);
-        res.status(204).end();
-    } catch (err) {
-        res.status(500).json(err.message)
-    }
+exports.searchBeans = async (req, res) => {
+  try {
+    const { query } = req.query; // e.g., ?query=Colombia
+    const beans = await beanService.searchBeans(query);
+    res.json(beans);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };

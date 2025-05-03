@@ -1,18 +1,13 @@
-import express from 'express';
-import {
-  getBeans,
-  getBean,
-  addBean,
-  modifyBean,
-  removeBean
-} from '../controllers/beanController.js';
-
+// This file defines the routes for the bean-related API endpoints.
+const express = require('express');
 const router = express.Router();
+const beanController = require('../controllers/beanController');
 
-router.get('/', getBeans);
-router.get('/:id', getBean);
-router.post('/', addBean);
-router.put('/:id', modifyBean);
-router.delete('/:id', removeBean);
+router.get('/getAllBeans', beanController.getAllBeans);
 
-export default router;
+router.get('/bean-of-the-day', beanController.getBeanOfTheDay);
+
+router.get('/searchBean', beanController.searchBeans);
+
+
+module.exports = router;
