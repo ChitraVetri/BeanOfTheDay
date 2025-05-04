@@ -94,3 +94,19 @@ exports.searchBeans = async (queryStr) => {
 };
 // This code defines a function `searchBeans` that allows searching for beans in the database based on a query string. It uses parameterized queries to prevent SQL injection attacks and returns the matching records from the `Beans` table. The search is performed on multiple columns: `name`, `origin`, and `flavor_profile`, allowing for flexible search capabilities.
 
+exports.placeOrder = async (order) => {
+  const pool = await poolPromise;
+  const { name, address, bean } = order;
+
+  // Insert the order into the database
+  await pool
+    .request()
+    .input('name', sql.NVarChar, name)
+    .input('address', sql.NVarChar, address)
+    .input('bean', sql.NVarChar, bean)
+    .query(`
+      INSERT INTO Orders (name, address, bean)
+      VALUES (@name, @address, @bean)
+    `);
+};
+// This code defines a function `placeOrder` that inserts a new order into the database. It takes an order object containing the customer's name, address, and the bean they wish to order. The function uses parameterized queries to prevent SQL injection attacks and ensures that the data is safely inserted into the `Orders` table in the database.

@@ -29,3 +29,19 @@ exports.searchBeans = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.placeOrder = async (req, res) => {
+  try {
+    const { name, address, bean } = req.body;
+    if (!name || !address || !bean) {
+      return res.status(400).json({ error: 'All fields are required.' });
+    }
+
+    // Simulate DB insert (replace with actual DB insert)
+    console.log('Received order:', req.body);
+    res.status(201).json({ message: 'Order placed successfully!' });
+  } catch (err) {
+    console.error('Error in placeOrder:', err);
+    res.status(500).json({ error: 'Failed to place order.' });
+  }
+};

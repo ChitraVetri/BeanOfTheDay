@@ -2,14 +2,20 @@ var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 var logger = require('morgan');
+var cors = require('cors')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
 var beanRoutes = require('./routes/beanRoutes'); // Import bean routes
-
+const userRoutes = require('./routes/userRoutes'); // Import user routes
+const cartRoutes = require('./routes/cartRoutes'); // Import cart routes
+var user
 var app = express();
+app.use(cors());
+app.use(bodyParser.json());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -26,6 +32,8 @@ app.use('/users', usersRouter);
 
 // Mount bean-related routes
 app.use('/api/beans', beanRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/cart', cartRoutes); // Mount cart-related routes
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
