@@ -56,6 +56,7 @@ export const TextFieldStyle = {
     },
   },
 };
+
 export const TableStyle = {
   minWidth: 650,
   borderCollapse: 'collapse',
@@ -63,15 +64,16 @@ export const TableStyle = {
     borderBottom: '1px solid #ddd',
     fontWeight: 'bold',
     letterSpacing: 1,
-    color: '#2c2c2c',
+    color: '#2c2c2c', // dark text color
     textShadow: '0.5px 0.5px 1px rgba(255, 255, 255, 0.3)',
     fontFamily: 'serif',
     padding: '12px 16px',
   },
   '& th': {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#8cac89', // Updated to match the desired color
+    color: '#fff', // White text for contrast
   },
   '& tr:hover': {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#f9f9f9', // Light hover color for rows
   },
 };
