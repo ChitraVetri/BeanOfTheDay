@@ -26,6 +26,20 @@ exports.updateCart = async (req, res) => {
         res.status(500).json(err.message);
     }
 };
+exports.updateQuantity = async (req, res) => {
+    try {
+        const { Id, quantity } = req.body;
+        if (!Id || quantity < 1) {
+            return res.status(400).json({ error: 'Invalid input' });
+        }
+
+        await cartService.updateQuantity(Id, quantity);
+        res.status(200).json({ message: 'Quantity updated successfully' });
+    } catch (err) {
+        console.error('Error in updateQuantity controller:', err);
+        res.status(500).json({ error: 'Failed to update quantity' });
+    }
+};
 
 exports.getTotalQuantity = async (req, res) => {
     try {

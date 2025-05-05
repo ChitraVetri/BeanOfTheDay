@@ -3,7 +3,9 @@ const express = require('express');
 const router = express.Router();
 const beanController = require('../controllers/beanController');
 
-router.get('/getAllBeans', beanController.getAllBeans);
+router.get('/getAllBeans', beanController.getAllBeans); // Fetch all beans
+
+router.get('/getBean/:id', beanController.getBeanById); // Fetch a specific bean by ID
 
 router.get('/bean-of-the-day', beanController.getBeanOfTheDay);
 

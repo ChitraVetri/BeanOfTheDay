@@ -11,6 +11,20 @@ exports.getAllBeans = async () => {
   }
 };
 
+exports.getBeanById = async (id) => {
+    try {
+      const pool = await poolPromise;
+      const result = await pool.request()
+          .input('Id', sql.VarChar, id.trim())
+          .query('SELECT * FROM Beans WHERE Id = @Id');
+      return result.recordset[0];
+  } catch (err) {
+      console.error('Error in getBeanById service:', err);
+      throw err;
+  }
+};
+
+
 exports.getBeanOfTheDay = async () => {
   try {
     const pool = await poolPromise;

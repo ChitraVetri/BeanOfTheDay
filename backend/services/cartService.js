@@ -18,7 +18,7 @@ exports.create = async ({ bean_id, bean_name, bean_quantity, bean_price, user_na
             .input('bean_id', sql.VarChar, bean_id)
             .input('bean_name', sql.VarChar, bean_name)
             .input('bean_quantity', sql.Int, bean_quantity)
-            .input('bean_price', sql.Decimal(10, 2), bean_price)
+            .input('bean_price', sql.VarChar, bean_price)
             .input('user_name', sql.NVarChar, user_name)
             .query(`
         INSERT INTO CartDetails (bean_id, bean_name, bean_quantity, bean_price,user_name)
@@ -31,14 +31,15 @@ exports.create = async ({ bean_id, bean_name, bean_quantity, bean_price, user_na
     }
 };
 
-exports.update = async ({ bean_id, bean_quantity, bean_name, bean_price }) => {
+exports.update = async ({ Id, Name, Cost, quantity }) => {
     try {
         const pool = await poolPromise;
         const result = await pool.request()
-            .input('bean_id', sql.VarChar, bean_id)
-            .input('bean_name', sql.VarChar, bean_name)
-            .input('bean_price', sql.Decimal(10, 2), bean_price)
-            .input('bean_quantity', sql.Int, bean_quantity)
+            .input('bean_id', sql.VarChar, Id)
+            .input('bean_name', sql.VarChar, Name)
+            .input('bean_price', sql.VarChar, Cost)
+            .input('bean_quantity', sql.Int, quantity)
+            .input('user_name', sql.VarChar, Name)
             .query(`
         MERGE CartDetails AS target
         USING (SELECT @bean_id AS bean_id) AS source
@@ -59,12 +60,30 @@ exports.update = async ({ bean_id, bean_quantity, bean_name, bean_price }) => {
     }
 };
 
+exports.updateQuantity = async (id, quantity) => {
+    try {
+        const pool = await poolPromise;
+        await pool.request()
+            .input('Id', sql.VarChar, id)
+            .input('Quantity', sql.Int, quantity)
+            .query(`
+          IF EXISTS (SELECT 1 FROM CartDetails WHERE Id = @Id)
+            UPDATE CartDetails SET product_quantity = @Quantity WHERE Id = @Id
+          ELSE
+            INSERT INTO CartDetails (Id, product_quantity) VALUES (@Id, @Quantity)
+        `);
+    } catch (err) {
+        console.error('Error in updateQuantity service:', err);
+        throw err;
+    }
+};
+
 exports.totalQuantity = async (user_name) => {
     try {
         const pool = await poolPromise;
         const result = await pool.request()
             .input('user_name', sql.NVarChar, user_name)
-            .query('SELECT SUM(bean_quantity) AS totalQuantity FROM CartDetails WHERE user_name = @user_name');        
+            .query('SELECT SUM(bean_quantity) AS totalQuantity FROM CartDetails WHERE user_name = @user_name');
         return result.recordset[0].totalQuantity || 0;
     } catch (err) {
         console.error('Error in totalQuantity service:', err);

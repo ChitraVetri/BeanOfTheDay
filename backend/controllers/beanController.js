@@ -8,7 +8,21 @@ exports.getAllBeans = async (req, res) => {
     console.error('Error in getAllBeans:', err);
     res.status(500).json({ error: 'Failed to fetch beans.' });
   }
+};  
+
+exports.getBeanById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const bean = await beanService.getBeanById(id); // returns an array
+    
+    res.json(bean); // return single bean object
+  } catch (err) {
+    console.error('Error in getBeanById:', err);
+    res.status(500).json({ error: 'Failed to fetch bean.' });
+  }
 };
+
 
 exports.getBeanOfTheDay = async (req, res) => {
   try {
