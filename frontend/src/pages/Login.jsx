@@ -4,10 +4,10 @@ import LockIcon from '@mui/icons-material/Lock';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Snackbar, Alert } from "@mui/material";
-import { TypographyStyle,ButtonStyle,TextFieldStyle, IconStyle } from '../styles';
+import { TypographyStyle, ButtonStyle, TextFieldStyle, IconStyle } from '../styles';
 
 function Login() {
-  const { isLoggedIn, login } = useAuth(); // Get login status and login function from context
+  const { login } = useAuth(); // Get login status and login function from context
 
   const [formData, setFormData] = useState({
     user_name: "",
@@ -32,9 +32,6 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Form submitted', formData);
-    // SEND VALUES TO DATABASE AND VALIDATE
     const response = await fetch(`${process.env.REACT_APP_API_URL}/users/login`, {
       method: "POST",
       headers: {
@@ -65,7 +62,7 @@ function Login() {
           alignItems: 'center',
           padding: '50px',
           borderRadius: 2,
-          boxShadow: 3,         
+          boxShadow: 3,
         }}
       >
         <Avatar sx={IconStyle}>
@@ -74,7 +71,7 @@ function Login() {
         <Typography variant="h6" sx={TypographyStyle} >
           COFFEE BEANS LOGIN
         </Typography>
-        <Box component="form" noValidate sx={{display: 'flex', flexDirection: 'column', alignItems:'center', justifyContent: 'center', padding: '40px', gap: '10px' }} onSubmit={handleSubmit}>
+        <Box component="form" noValidate sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px', gap: '10px' }} onSubmit={handleSubmit}>
           <TextField
             margin="normal"
             required

@@ -13,6 +13,7 @@ import React from 'react';
 import AddBeans from "./AddBeans";
 import SignUpForm from "./SignUp";
 import BeanDetail from "./BeanDetail";
+import BeanSearch from "../components/BeanSearch";
 
 
 function Layout() {
@@ -48,6 +49,7 @@ function Layout() {
                             <Route path="/About" element={<About />}></Route>
                             <Route path="/Contact" element={<Contact />}></Route>
                             <Route path="/BeanDetails/:id" element={<BeanDetail/>}></Route>
+                            <Route path="/SearchBeans" element={<BeanSearch/>}></Route>
                             <Route path="/Shop" element={<BeanList />}></Route>
                             <Route path="/Login" element={<Login />}></Route>
                             <Route path="/Cart" element={<Cart />}></Route>

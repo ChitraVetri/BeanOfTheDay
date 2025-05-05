@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 import { addToCart } from '../redux/Slice';
 import { Box, Typography, Button } from '@mui/material';
 import { TypographyStyle, ButtonStyle } from '../styles';
-import { useAuth } from '../context/context';
+import { useAuth } from '../context/AuthContext'; // Import the AuthContext
 
 const BeanDetail = () => {
   const { id } = useParams();
@@ -27,9 +27,8 @@ const BeanDetail = () => {
       Id: bean.Id,
       Name: bean.Name,
       Cost: bean.Cost,
-      ImageUrl: bean.ImageUrl,
-      quantity: 1,
-      user_name: user // Assuming user is the username or ID
+      ImageUrl: bean.ImageUrl,      
+      User: user // Assuming user is the username or ID
     };
 
     // Dispatch to Redux
