@@ -1,9 +1,9 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { TypographyStyle } from '../styles';
 
 function About() {
     return (
-        <Box sx={{ display: "flex",flexDirection:"column", padding: "60px", gap: "60px" ,mt: 2, mb: 2,}}>
+        <Box sx={{ display: "flex",flexDirection:"column", padding: "60px", gap: "60px" ,mt: 6, mb: 6,}}>
 
 
             <Typography variant="h4" sx={TypographyStyle}>About Us</Typography>

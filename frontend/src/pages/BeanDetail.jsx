@@ -3,51 +3,78 @@ import { useParams } from 'react-router-dom';
 import axios from '../api/axios';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../redux/Slice';
-import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import { TypographyStyle, ButtonStyle } from '../styles';
+import { useAuth } from '../context/context';
 
 const BeanDetail = () => {
   const { id } = useParams();
+  const {user} = useAuth(); // Get user info from context
   const [bean, setBean] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URL}/beans/${id}`)
+    axios.get(`${process.env.REACT_APP_API_URL}/beans/getBean/${id}`)
       .then(res => {
-        setBean(res.data)
-        setLoading(false);
+        setBean(res.data);
       })
       .catch(err => console.error('Failed to load bean:', err));
   }, [id]);
 
   const dispatch = useDispatch()
 
-  const handleAddToCart = () => {
-    dispatch(addToCart({
+  const handleAddToCart = async () => {
+    const cartItem = {
       Id: bean.Id,
       Name: bean.Name,
       Cost: bean.Cost,
       ImageUrl: bean.ImageUrl,
       quantity: 1,
-    }));
+      user_name: user // Assuming user is the username or ID
+    };
+
+    // Dispatch to Redux
+    dispatch(addToCart(cartItem));
+
+    // Persist to database
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/cart/updatecart`, cartItem);
+    } catch (error) {
+      console.error('Failed to update cart in DB:', error);
+    }
   };
 
-  if (loading) return <CircularProgress sx={{ mt: 4 }} />;
-
+  if (!bean) {
+    return <Typography>Loading...</Typography>; // or a spinner
+  }
   return (
-    <Box sx={{ p: 4, maxWidth: 800, mx: 'auto' }}>
-      <img
-        src={bean.ImageUrl}
-        alt={bean.Name}
-        style={{ width: '100%', height: 'auto', borderRadius: 8, marginBottom: 16 }}
+    <Box
+      sx={{
+        display: 'grid',
+        columnGap: 1,
+        rowGap: 1,
+        gridTemplateColumns: {
+          xs: '1fr',    // 1 column on small screens
+          sm: '1fr 1fr' // 2 columns on medium and up
+        },
+      }}
+    >      <Box
+        sx={{
+          backgroundImage: bean?.ImageUrl ? `url(${bean.ImageUrl})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          height: { xs: '40vh', sm: '60vh' },
+          padding: '40px',
+        }}
       />
-      <Typography variant="h4" sx={TypographyStyle}>{bean.Name}</Typography>
-      <Typography variant="h6" sx={TypographyStyle}>Origin: {bean.Country}</Typography>
-      <Typography variant="body1" sx={TypographyStyle}>{bean.Description || 'No description available.'}</Typography>
-      <Typography variant="h5" sx={TypographyStyle}>Price: {bean.Cost}</Typography>
-      <Button variant="contained" sx={ButtonStyle} onClick={handleAddToCart}>
-        Add to Cart
-      </Button>
+      <Box sx={{ p: 2, height: { xs: 'auto', sm: '60vh' }, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '40px', gap: '10px' }}>
+        <Typography variant="h3" sx={TypographyStyle}>{bean.Name}</Typography>
+        <Typography variant="h5" sx={TypographyStyle}>Origin: {bean.Country}</Typography>
+        <Typography variant="body1" sx={TypographyStyle}>{bean.Description || 'No description available.'}</Typography>
+        <Typography variant="h6" sx={TypographyStyle}>Price: {bean.Cost}</Typography>
+        <Button variant="contained" sx={ButtonStyle} onClick={handleAddToCart}>
+          Add to Cart
+        </Button>
+      </Box>
     </Box>
   );
 };

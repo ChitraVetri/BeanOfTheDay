@@ -8,34 +8,15 @@ import BeanList from "../components/BeanList";
 import Contact from "./Contact";
 import Login from "./Login";
 import Cart from "./Cart";
-import { CounterContext } from "../context/Context";
-import { useContext } from "react";
-import React, { useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
+import  { useAuth} from '../context/AuthContext';
+import React from 'react';
 import AddBeans from "./AddBeans";
 import SignUpForm from "./SignUp";
 import BeanDetail from "./BeanDetail";
 
 
 function Layout() {
-    const { isLoggedIn } = useContext(CounterContext);
-    const [role, setRole] = useState(null);
-    const [loading, setLoading] = useState(true); // Loading state
-
-    useEffect(() => {
-        const token = localStorage.getItem('jwtToken');
-        if (token) {
-            const decoded = jwtDecode(token);
-            setRole(decoded.role); // Extract the role from the decoded token        
-        }
-        setLoading(false);
-        console.log(role)
-
-    }, []);
-
-    if (loading) {
-        return <div>Loading...</div>; // Show loading state while waiting for role
-    }
+    const { isLoggedIn ,role} = useAuth(); // Get login status and role from context
 
     // Protected Route based on role
     const ProtectedRoute = ({ children, requiredRole }) => {
@@ -66,7 +47,7 @@ function Layout() {
                             <Route path="/Home" element={<Home />}></Route>
                             <Route path="/About" element={<About />}></Route>
                             <Route path="/Contact" element={<Contact />}></Route>
-                            {<Route path="/Details/:id" element={<BeanDetail/>}></Route>}
+                            <Route path="/BeanDetails/:id" element={<BeanDetail/>}></Route>
                             <Route path="/Shop" element={<BeanList />}></Route>
                             <Route path="/Login" element={<Login />}></Route>
                             <Route path="/Cart" element={<Cart />}></Route>

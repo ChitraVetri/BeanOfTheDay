@@ -52,7 +52,7 @@ export default function BeanList() {
                                 flexDirection: 'column',
                                 justifyContent: 'center'
                             }}>
-                                <Link to={`/BeanDetail/${bean.Id}`} style={{ textDecoration: 'none' }}>
+                                <Link to={`/BeanDetails/${bean.Id}`} style={{ textDecoration: 'none' }}>
                                     <CardMedia
                                         component="img"
                                         height="140"

@@ -33,13 +33,26 @@ const cartsSlice = createSlice({
 
             state.productData = state.productData.filter(item => item.Id !== idToRemove);
         },
+        updateQuantity: (state, action) => {
+            const { id, quantity } = action.payload;
+            const item = state.productData.find((item) => item.Id === id);
 
+            if (item) {
+                // Only update the quantity if it will not result in a non-positive value
+                const newQuantity = item.product_quantity + quantity;
+                if (newQuantity > 0) {
+                    item.product_quantity = newQuantity;
+                    // Update total count
+                    state.count += quantity;
+                }
+            }
+        },
         updateCartCount: (state, action) => {
             state.count = action.payload || 0;
         }
     }
 })
 
-export const { addToCart, removeFromCart, updateCartCount } = cartsSlice.actions
+export const { addToCart, removeFromCart,updateQuantity, updateCartCount } = cartsSlice.actions
 
 export default cartsSlice.reducer;

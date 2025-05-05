@@ -8,7 +8,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import IconButton from '@mui/material/IconButton';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { Link, useNavigate } from 'react-router-dom';
-import { CounterContext } from '../context/Context';
+import { useAuth } from '../context/AuthContext';
 import { Badge } from '@mui/material';
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect } from 'react';
@@ -20,7 +20,7 @@ import axios from '../api/axios';
 
 export default function Header() {
 
-  const { logout } = React.useContext(CounterContext)
+  const { logout,user } = useAuth(); // Get logout function from context
   const navigate = useNavigate();
   function handleClick() {
     navigate("/Cart")
@@ -32,21 +32,22 @@ export default function Header() {
   }
   const fetchTotalQuantity = () => async (dispatch) => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/cart/totalquantity`);
+      const user_name = { user_name: user }; // Assuming user is the username or ID
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/cart/totalquantity`,user_name);
       dispatch(updateCartCount(response.data.totalQuantity));
     } catch (error) {
       console.error('Failed to fetch cart total quantity:', error);
     }
   };
 
-
-  const dispatch = useDispatch();
-  const cartCount = useSelector((state) => state.carts.count);
+  const dispatch = useDispatch(); 
 
   useEffect(() => {
     dispatch(fetchTotalQuantity()); // Fetch badge count on load
   }, [dispatch]);
 
+  const cartCount = useSelector((state) => state.carts.count);
+  
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar pposition="fixed" sx={{
@@ -79,7 +80,7 @@ export default function Header() {
             ))}
           </Box>
           <IconButton aria-label="cart" onClick={handleClick}>
-            <Badge badgeContent={cartCount} sx={IconStyle}>
+            <Badge badgeContent={cartCount}>
               <ShoppingCartIcon sx={IconStyle} />
             </Badge>
           </IconButton>

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../api/axios';
-import { Box, Button, Typography, keyframes } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { Link } from 'react-router-dom';
-import { TypographyStyle,ButtonStyle } from '../styles';
+import { TypographyStyle, ButtonStyle } from '../styles';
 
 export default function Home() {
     const [beans, setBeans] = useState([]);
@@ -18,10 +18,12 @@ export default function Home() {
                 display: 'grid',
                 columnGap: 1,
                 rowGap: 1,
+                mb: 2,
                 gridTemplateColumns: {
                     xs: '1fr',    // 1 column on small screens
                     sm: '1fr 1fr' // 2 columns on medium and up
-                },            }}
+                },
+            }}
         >
             <Box
                 sx={{
@@ -29,12 +31,13 @@ export default function Home() {
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     height: { xs: '40vh', sm: '60vh' },
+                    padding: '40px',
                 }}
             />
             <Box sx={{ p: 2, height: { xs: 'auto', sm: '60vh' }, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '40px', gap: '10px' }}>
                 <Typography
-                    variant="h3" 
-                    sx={TypographyStyle}                
+                    variant="h3"
+                    sx={TypographyStyle}
                 >
                     BEAN FOR THE DAY
                 </Typography>

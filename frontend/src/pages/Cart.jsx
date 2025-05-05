@@ -1,175 +1,137 @@
-import { Box, Breadcrumbs, Button, Divider, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material"
-import DeleteIcon from '@mui/icons-material/Delete';
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { removeFromCart } from "../redux/Slice";
-import { useDispatch } from 'react-redux';
+import {
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+    Paper, Box, Breadcrumbs, Button,Typography, Divider, IconButton, TextField
+} from '@mui/material';
+import { Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { Add as AddIcon, Remove as RemoveIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { updateQuantity, removeFromCart } from '../redux/Slice'; // Make sure you import your cart actions
+import { TypographyStyle, ButtonStyle,TableStyle} from '../styles';
+import axios from '../api/axios';
 
-
-function Cart() {
-
-    const data = useSelector(state => state.carts.productData)
-    const [tableData, setTableData] = useState([]);
-
-    async function fetchCartData() {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/cart/getcartdetails`)
-        const results = await response.json();
-        setTableData(results)
-        setTotalAmount(calculateTotal(results));  // Calculate total with data
-    }
-
-    fetchCartData()
-
-
-    function calculateTotal(data) {
-        return data.reduce((acc, item) => acc + item.product_price * item.product_quantity, 0);
-    }
-    const [totalAmount, setTotalAmount] = useState(tableData.reduce((acc, item) => acc + item.product_price * item.product_quantity, 0))
-
-
-    function handleQuantityChange(id, quantity) {
-        setTableData((prevData) => {
-            const updatedData = prevData.map(product =>
-                product.product_id === id ? { ...product, product_quantity: Number(quantity) } : product
-            );
-            setTotalAmount(calculateTotal(updatedData));  // Calculate total with updated data
-            return updatedData;
-        });
-    }
-
-    const dispatch = useDispatch()
-
-    async function fetchCartDelete(productId) {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/cart/delete/${productId}`, {
-            method: 'DELETE',
-        });
-        if (response.ok) {
-            console.log(`Resource with ID ${productId} deleted successfully.`);
-        } else {
-            console.error('Failed to delete the resource:', response.status);
-        }
-    }
-
-    const handleDelete = (itemId) => {
-        dispatch(removeFromCart(itemId));
-        fetchCartDelete(itemId);
+const Cart = () => {
+    const dispatch = useDispatch();
+    const cartItems = useSelector(state => state.carts.productData);
+    //    const totalAmount = cartItems.reduce((sum, item) => sum + item.product_quantity * item.Cost, 0);
+    const getTotalAmount = () => {
+        return cartItems.reduce((total, item) => {
+            const numericCost = parseFloat(item.Cost.replace(/[£]/g, '')) || 0;
+            return total + numericCost * item.product_quantity;
+        }, 0);
     };
+
+    const totalAmount = getTotalAmount().toFixed(2);
+
+    const handleIncreaseQuantity = async (id) => {
+        const item = cartItems.find(item => item.Id === id);
+        if (item) {
+            dispatch(updateQuantity({ id: item.Id, quantity: 1 }));
+
+            try {
+                await axios.put(`${process.env.REACT_APP_API_URL}/cart/updateQuantity`, {
+                    Id: item.Id,
+                    quantity: item.product_quantity + 1,
+                });
+            } catch (error) {
+                console.error('Failed to increase quantity in DB:', error);
+            }
+        }
+    };
+
+
+    const handleDecreaseQuantity = async (id) => {
+        const item = cartItems.find(item => item.Id === id);
+        if (item && item.product_quantity > 1) {
+            dispatch(updateQuantity({ id: item.Id, quantity: -1 }));
+
+            try {
+                await axios.put(`${process.env.REACT_APP_API_URL}/cart/updatecart`, {
+                    Id: item.Id,
+                    quantity: item.product_quantity - 1,
+                });
+            } catch (error) {
+                console.error('Failed to decrease quantity in DB:', error);
+            }
+        }
+    };
+
+
+    const handleRemoveItem = async (id) => {
+        // Redux: Remove from local cart
+        dispatch(removeFromCart(id));
+
+        // Backend: Remove from DB
+        try {
+            await axios.delete(`${process.env.REACT_APP_API_URL}/cart/delete/${id}`);
+        } catch (error) {
+            console.error('Failed to remove item from DB cart:', error);
+        }
+    };
+
     return (
-        <div>
-            <Breadcrumbs>
-                <Link to="/home">
-                    Home
-                </Link>
-                <Link>
-                    Shopping Cart
-                </Link>
-
+        <Box sx={{ p: 4 }}>
+            <Breadcrumbs sx={{ mb: 3 }}>
+                <Link to="/" style={{ textDecoration: 'none', color: '#3f3f3f', fontWeight: 'bold' }}>Home</Link>
+                <Typography color="text.primary">Cart</Typography>
             </Breadcrumbs>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>
-                            Product
-                        </TableCell>
-                        <TableCell>
-                            Price
-                        </TableCell>
-                        <TableCell>
-                            Quantity
-                        </TableCell>
-                        <TableCell>
-                            Total
-                        </TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {tableData.map((product) => {
-                        return <TableRow key={product.product_name}>
-                            <TableCell>
-                                {product.product_name}
-                            </TableCell>
-                            <TableCell>
-                                $ {product.product_price}
-                            </TableCell>
-                            <TableCell sx={{
-                                width: "16px",
-                                height: "16px",
 
-                            }}>
-                                <TextField onChange={(e) => handleQuantityChange(product.product_id, e.target.value)} sx={{ textAlign: "center" }} value={product.product_quantity}></TextField>
-                            </TableCell>
-                            <TableCell>
-                                $ {product.product_price * product.product_quantity}
-                            </TableCell>
-                            <TableCell>
-                                <DeleteIcon color="error" onClick={() => handleDelete(product.product_id)} />
-                            </TableCell>
+            <TableContainer component={Paper}>
+                <Table sx={TableStyle}>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell><strong>Name</strong></TableCell>
+                            <TableCell><strong>Price</strong></TableCell>
+                            <TableCell><strong>Quantity</strong></TableCell>
+                            <TableCell><strong>Total</strong></TableCell>
+                            <TableCell align="center"><strong>Action</strong></TableCell>
                         </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {cartItems.map(item => {
+                            const price = parseFloat(item.Cost.replace(/[^\d.]/g, '')) || 0;
+                            const total = (price * item.product_quantity).toFixed(2);
+                            return (
+                                <TableRow key={item.Id}>
+                                    <TableCell>{item.Name}</TableCell>
+                                    <TableCell>{item.Cost}</TableCell>
+                                    <TableCell>
+                                        <IconButton onClick={() => handleDecreaseQuantity(item.Id)} disabled={item.product_quantity <= 1}>
+                                            <RemoveIcon />
+                                        </IconButton>
+                                        <TextField
+                                            value={item.product_quantity}
+                                            onChange={(e) =>
+                                                dispatch(updateQuantity({ id: item.Id, quantity: parseInt(e.target.value) || 1 }))
+                                            }
+                                            type="number"
+                                            size="small"
+                                            sx={{ width: 50, mx: 1 }}
+                                        />
+                                        <IconButton onClick={() => handleIncreaseQuantity(item.Id)}>
+                                            <AddIcon />
+                                        </IconButton>
+                                    </TableCell>
+                                    <TableCell>£{total}</TableCell>
+                                    <TableCell align="center">
+                                        <IconButton onClick={() => handleRemoveItem(item.Id)}>
+                                            <DeleteIcon color="error" />
+                                        </IconButton>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
-                    })}
-                </TableBody>
-            </Table>
-            <Box sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px",
-                width: "30%",
-                marginTop: "30px"
-            }}>
-                <Typography variant="h4">
-                    Cart Totals
-                </Typography>
+            <Divider sx={{ my: 3 }} />
 
-                <Box sx={{
-                    display: "flex",
-                    justifyContent: "space-between"
-                }}>
-                    <Typography variant="p">
-                        subtotal
-                    </Typography>
-                    <Typography variant="p">
-                        $ {totalAmount}
-                    </Typography>
-
-                </Box>
-
-                <Divider />
-
-
-                <Box sx={{
-                    display: "flex",
-                    justifyContent: "space-between"
-                }}>
-                    <Typography variant="p">
-                        Shipping Fee
-                    </Typography>
-                    <Typography variant="p">
-                        free
-                    </Typography>
-
-                </Box>
-
-
-                <Divider />
-                <Box sx={{
-                    display: "flex",
-                    justifyContent: "space-between"
-                }}>
-                    <Typography variant="p">
-                        Total
-                    </Typography>
-                    <Typography variant="p">
-                        $ {totalAmount}
-                    </Typography>
-                </Box>
-                <Button variant="contained" sx={{ backgroundColor: '#3fc1c9', fontWeight: 'bold', width: "fit-content" }}>Proceed Checkout</Button>
-
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 4 }}>
+                <Typography variant="h6" sx={TypographyStyle}>Total Amount: £{totalAmount}</Typography>
+                <Button variant="contained" color="primary" sx={ButtonStyle}>Proceed to Checkout</Button>
             </Box>
+        </Box>
+    );
+};
 
-
-        </div>
-
-    )
-}
-export default Cart
+export default Cart;

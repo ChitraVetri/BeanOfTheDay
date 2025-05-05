@@ -1,13 +1,13 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { Container, Box, TextField, Button, Typography, Avatar } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
-import { CounterContext } from '../context/Context';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Snackbar, Alert } from "@mui/material";
 import { TypographyStyle,ButtonStyle,TextFieldStyle, IconStyle } from '../styles';
 
 function Login() {
-  const { isLoggedIn, login } = useContext(CounterContext)
+  const { isLoggedIn, login } = useAuth(); // Get login status and login function from context
 
   const [formData, setFormData] = useState({
     user_name: "",
@@ -74,7 +74,7 @@ function Login() {
         <Typography variant="h6" sx={TypographyStyle} >
           COFFEE BEANS LOGIN
         </Typography>
-        <Box component="form" noValidate sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '40px', gap: '10px' }} onSubmit={handleSubmit}>
+        <Box component="form" noValidate sx={{display: 'flex', flexDirection: 'column', alignItems:'center', justifyContent: 'center', padding: '40px', gap: '10px' }} onSubmit={handleSubmit}>
           <TextField
             margin="normal"
             required
