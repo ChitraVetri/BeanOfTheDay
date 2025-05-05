@@ -2,7 +2,9 @@ const cartService = require('../services/cartService');
 
 exports.getCartDetails = async (req, res) => {
     try {
-        const result = await cartService.getAll();
+        const user = req.query.user?.trim();
+        console.log('User:', user); // Log the user for debugging
+        const result = await cartService.getAll(user);
         res.json(result);
     } catch (err) {
         res.status(500).json(err.message);
@@ -43,7 +45,8 @@ exports.updateQuantity = async (req, res) => {
 
 exports.getTotalQuantity = async (req, res) => {
     try {
-        const result = await cartService.totalQuantity();
+        const user = req.query.user?.trim();
+        const result = await cartService.totalQuantity(user);
         res.status(200).json({ totalQuantity: result });
     } catch (err) {
         res.status(500).json(err.message);
@@ -52,7 +55,7 @@ exports.getTotalQuantity = async (req, res) => {
 
 exports.deleteCartItem = async (req, res) => {
     try {
-        const result = await cartService.delete(req.params.productId);
+        const result = await cartService.delete(req.params.Id, req.params.user);
         if (!result) {
             return res.status(404).json({ message: 'Product not found' });
         }

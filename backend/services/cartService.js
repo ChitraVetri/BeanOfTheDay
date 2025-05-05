@@ -1,9 +1,14 @@
 const { poolPromise, sql } = require('../models/beanModel');
 
-exports.getAll = async () => {
+exports.getAll = async (user) => {
     try {
-        const pool = await poolPromise;
-        const result = await pool.request().query('SELECT * FROM CartDetails');
+        const pool = await poolPromise;        
+        // Create a request and input parameters explicitly
+        const request = pool.request()
+            .input('user_name', sql.NVarChar, user); // Bind the input parameter explicitly        /
+
+        // Run the query
+        const result = await request.query('SELECT * FROM CartDetails WHERE user_name = @user_name');  
         return result.recordset;
     } catch (err) {
         console.error('Error in getAll service:', err);
@@ -31,27 +36,27 @@ exports.create = async ({ bean_id, bean_name, bean_quantity, bean_price, user_na
     }
 };
 
-exports.update = async ({ Id, Name, Cost, quantity }) => {
+exports.update = async ({ Id, Name, Cost, User }) => {
     try {
         const pool = await poolPromise;
         const result = await pool.request()
             .input('bean_id', sql.VarChar, Id)
             .input('bean_name', sql.VarChar, Name)
             .input('bean_price', sql.VarChar, Cost)
-            .input('bean_quantity', sql.Int, quantity)
-            .input('user_name', sql.VarChar, Name)
+            .input('bean_quantity', sql.Int, 1)
+            .input('user_name', sql.VarChar, User)
             .query(`
         MERGE CartDetails AS target
         USING (SELECT @bean_id AS bean_id) AS source
-        ON (target.bean_id = source.bean_id)
+        ON (target.bean_id = source.bean_id) and target.user_name = @user_name
         WHEN MATCHED THEN 
           UPDATE SET 
             bean_quantity = target.bean_quantity + @bean_quantity,
             bean_name = @bean_name,
             bean_price = @bean_price
         WHEN NOT MATCHED THEN 
-          INSERT (bean_id, bean_name, bean_quantity, bean_price)
-          VALUES (@bean_id, @bean_name, @bean_quantity, @bean_price);
+          INSERT (bean_id, bean_name, bean_quantity, bean_price, user_name)
+          VALUES (@bean_id, @bean_name, @bean_quantity, @bean_price, @user_name);
       `);
         return result.rowsAffected;
     } catch (err) {
@@ -60,17 +65,16 @@ exports.update = async ({ Id, Name, Cost, quantity }) => {
     }
 };
 
-exports.updateQuantity = async (id, quantity) => {
+exports.updateQuantity = async (id, quantity, user) => {
     try {
         const pool = await poolPromise;
         await pool.request()
             .input('Id', sql.VarChar, id)
             .input('Quantity', sql.Int, quantity)
+            .input('user_name', sql.VarChar, user)
             .query(`
-          IF EXISTS (SELECT 1 FROM CartDetails WHERE Id = @Id)
-            UPDATE CartDetails SET product_quantity = @Quantity WHERE Id = @Id
-          ELSE
-            INSERT INTO CartDetails (Id, product_quantity) VALUES (@Id, @Quantity)
+          IF EXISTS (SELECT 1 FROM CartDetails WHERE Id = @Id and user_name = @user_name)
+            UPDATE CartDetails SET product_quantity = @Quantity WHERE Id = @Id and user_name = @user_name          
         `);
     } catch (err) {
         console.error('Error in updateQuantity service:', err);
@@ -78,25 +82,30 @@ exports.updateQuantity = async (id, quantity) => {
     }
 };
 
-exports.totalQuantity = async (user_name) => {
+exports.totalQuantity = async (user) => {
     try {
         const pool = await poolPromise;
         const result = await pool.request()
-            .input('user_name', sql.NVarChar, user_name)
-            .query('SELECT SUM(bean_quantity) AS totalQuantity FROM CartDetails WHERE user_name = @user_name');
-        return result.recordset[0].totalQuantity || 0;
+            .input('user_name', sql.VarChar, user)
+            .query(`
+                SELECT ISNULL(SUM(bean_quantity), 0) AS totalQuantity 
+                FROM CartDetails 
+                WHERE user_name = @user_name
+            `);
+        return result.recordset[0].totalQuantity;
     } catch (err) {
         console.error('Error in totalQuantity service:', err);
         throw err;
     }
 };
 
-exports.delete = async (beanId) => {
+exports.delete = async (beanId, user) => {
     try {
         const pool = await poolPromise;
         const result = await pool.request()
             .input('bean_id', sql.VarChar, beanId)
-            .query('DELETE FROM CartDetails WHERE bean_id = @bean_id');
+            .input('user_name', sql.VarChar, user)
+            .query('DELETE FROM CartDetails WHERE bean_id = @bean_id and user_name = @user_name');
         return result.rowsAffected[0] > 0;
     } catch (err) {
         console.error('Error in delete service:', err);
