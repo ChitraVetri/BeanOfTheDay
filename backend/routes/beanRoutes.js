@@ -11,15 +11,6 @@ router.get('/bean-of-the-day', beanController.getBeanOfTheDay);
 
 router.get('/searchBean', beanController.searchBeans);
 
-router.post('/order', async (req, res) => {
-    const { name, address, bean } = req.body;
-    if (!name || !address || !bean) {
-      return res.status(400).json({ error: 'All fields are required.' });
-    }
-  
-    // Simulate DB insert (replace with actual DB insert)
-    console.log('Received order:', req.body);
-    res.status(201).json({ message: 'Order placed successfully!' });
-  });
+router.post('/create-order', beanController.createOrder);
 
 module.exports = router;
