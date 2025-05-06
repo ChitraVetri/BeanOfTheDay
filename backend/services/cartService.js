@@ -2,13 +2,13 @@ const { poolPromise, sql } = require('../models/beanModel');
 
 exports.getAll = async (user) => {
     try {
-        const pool = await poolPromise;        
+        const pool = await poolPromise;
         // Create a request and input parameters explicitly
         const request = pool.request()
             .input('user_name', sql.NVarChar, user); // Bind the input parameter explicitly        /
 
         // Run the query
-        const result = await request.query('SELECT * FROM CartDetails WHERE user_name = @user_name');  
+        const result = await request.query('SELECT * FROM CartDetails WHERE user_name = @user_name');
         return result.recordset;
     } catch (err) {
         console.error('Error in getAll service:', err);
@@ -67,14 +67,14 @@ exports.update = async ({ Id, Name, Cost, User }) => {
 
 exports.updateQuantity = async (id, quantity, user) => {
     try {
-        const pool = await poolPromise;
+        const pool = await poolPromise;       
         await pool.request()
-            .input('Id', sql.VarChar, id)
-            .input('Quantity', sql.Int, quantity)
+            .input('bean_id', sql.VarChar, id)
+            .input('bean_quantity', sql.Int, quantity)
             .input('user_name', sql.VarChar, user)
             .query(`
-          IF EXISTS (SELECT 1 FROM CartDetails WHERE Id = @Id and user_name = @user_name)
-            UPDATE CartDetails SET product_quantity = @Quantity WHERE Id = @Id and user_name = @user_name          
+          IF EXISTS (SELECT 1 FROM CartDetails WHERE bean_id = @bean_id and user_name = @user_name)
+            UPDATE CartDetails SET bean_quantity = @bean_quantity WHERE bean_id = @bean_id and user_name = @user_name          
         `);
     } catch (err) {
         console.error('Error in updateQuantity service:', err);
@@ -101,10 +101,12 @@ exports.totalQuantity = async (user) => {
 
 exports.delete = async (beanId, user) => {
     try {
+        console.log("beanId",beanId)
+        console.log("user",user)    
         const pool = await poolPromise;
         const result = await pool.request()
             .input('bean_id', sql.VarChar, beanId)
-            .input('user_name', sql.VarChar, user)
+            .input('user_name', sql.NVarChar, user)
             .query('DELETE FROM CartDetails WHERE bean_id = @bean_id and user_name = @user_name');
         return result.rowsAffected[0] > 0;
     } catch (err) {

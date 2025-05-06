@@ -12,15 +12,15 @@ exports.getAllBeans = async () => {
 };
 
 exports.getBeanById = async (id) => {
-    try {
-      const pool = await poolPromise;
-      const result = await pool.request()
-          .input('Id', sql.VarChar, id.trim())
-          .query('SELECT * FROM Beans WHERE Id = @Id');
-      return result.recordset[0];
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('Id', sql.VarChar, id.trim())
+      .query('SELECT * FROM Beans WHERE Id = @Id');
+    return result.recordset[0];
   } catch (err) {
-      console.error('Error in getBeanById service:', err);
-      throw err;
+    console.error('Error in getBeanById service:', err);
+    throw err;
   }
 };
 
@@ -57,13 +57,13 @@ exports.getBeanOfTheDay = async () => {
       .input('date', sql.Date, yesterday)
       .query('SELECT * FROM BeanOfTheDay WHERE date = @date');
 
-      if (yesterdayResult.recordset.length > 0) {
-        yesterdayBeanId = yesterdayResult.recordset[0].bean_id;
-      }
-      
-      const filteredBeans = yesterdayBeanId
-        ? beans.filter(bean => bean.id !== yesterdayBeanId)
-        : beans;
+    if (yesterdayResult.recordset.length > 0) {
+      yesterdayBeanId = yesterdayResult.recordset[0].bean_id;
+    }
+
+    const filteredBeans = yesterdayBeanId
+      ? beans.filter(bean => bean.id !== yesterdayBeanId)
+      : beans;
 
     if (filteredBeans.length === 0) throw new Error('Only one bean available. Cannot ensure uniqueness.');
 
@@ -95,32 +95,61 @@ exports.searchBeans = async (queryStr) => {
   const pool = await poolPromise;
 
   const result = await pool
-    .request()
-    .input('query', sql.NVarChar, `%${queryStr}%`)
-    .query(`
-      SELECT * FROM Beans
-      WHERE Name LIKE @query
-         OR Country LIKE @query
-         OR Colour LIKE @query
-    `);
-
+  .request()
+  .input('query', sql.NVarChar, `%${queryStr}%`)
+  .query(`
+    SELECT * FROM Beans
+    WHERE Name COLLATE SQL_Latin1_General_CP1_CI_AS LIKE @query
+       OR Country COLLATE SQL_Latin1_General_CP1_CI_AS LIKE @query
+       OR Colour COLLATE SQL_Latin1_General_CP1_CI_AS LIKE @query
+  `);
   return result.recordset;
 };
 // This code defines a function `searchBeans` that allows searching for beans in the database based on a query string. It uses parameterized queries to prevent SQL injection attacks and returns the matching records from the `Beans` table. The search is performed on multiple columns: `name`, `origin`, and `flavor_profile`, allowing for flexible search capabilities.
 
-exports.placeOrder = async (order) => {
+exports.createOrder = async (userId, items, total) => {
   const pool = await poolPromise;
-  const { name, address, bean } = order;
+  const transaction = new sql.Transaction(pool);  
+  try {
+    await transaction.begin();
 
-  // Insert the order into the database
-  await pool
-    .request()
-    .input('name', sql.NVarChar, name)
-    .input('address', sql.NVarChar, address)
-    .input('bean', sql.NVarChar, bean)
-    .query(`
-      INSERT INTO Orders (name, address, bean)
-      VALUES (@name, @address, @bean)
-    `);
+    // Insert into Orders table
+    const orderResult = await transaction.request()
+      .input('User', sql.VarChar, userId)
+      .input('Total', sql.Decimal(10, 2), total)
+      .query(`
+                INSERT INTO Orders (UserId, TotalAmount, OrderDate)
+                OUTPUT INSERTED.Id
+                VALUES (@User, @Total, GETDATE())
+            `);
+
+    const orderId = orderResult.recordset[0].Id;
+
+    // Insert order items
+    for (const item of items) {
+      await transaction.request()
+        .input('OrderId', sql.Int, orderId)
+        .input('ProductId', sql.VarChar, item.bean_id)
+        .input('ProductName', sql.VarChar, item.bean_name)
+        .input('Quantity', sql.Int, item.bean_quantity)
+        .input('Cost', sql.VarChar, item.bean_price)
+        .query(`
+                    INSERT INTO OrderItems (OrderId, ProductId, Quantity, Price,ProductName)
+                    VALUES (@OrderId, @ProductId, @Quantity, @Cost, @ProductName)
+                `);
+
+      // ✅ Clear cart for the user
+      await transaction.request()
+        .input('bean_id', sql.VarChar, item.bean_id)
+        .input('user_name', sql.NVarChar, item.user_name)
+        .query(`DELETE FROM CartDetails WHERE bean_id = @bean_id and user_name = @user_name`);
+    }
+    // Commit the transaction
+    await transaction.commit();
+
+    return { orderId, userId, items, total };
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
 };
-// This code defines a function `placeOrder` that inserts a new order into the database. It takes an order object containing the customer's name, address, and the bean they wish to order. The function uses parameterized queries to prevent SQL injection attacks and ensures that the data is safely inserted into the `Orders` table in the database.

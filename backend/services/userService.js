@@ -6,6 +6,16 @@ const { poolPromise, sql } = require('../models/beanModel');
 exports.register = async ({ user_email, user_name, user_password }) => {
   try {
     const pool = await poolPromise;
+
+    // Check if username already exists
+    const existingUser = await pool.request()
+      .input('user_name', sql.NVarChar, user_name)
+      .query(`SELECT 1 FROM UserDetails WHERE user_name = @user_name`);
+
+    if (existingUser.recordset.length > 0) {
+      throw new Error('Username already taken. Please choose a different one.');      
+    }
+
     const hashedPassword = await bcrypt.hash(user_password, 10);
     const user_id = uuidv4();
 
@@ -20,16 +30,17 @@ exports.register = async ({ user_email, user_name, user_password }) => {
         VALUES (@user_id, @user_email, @user_name, @user_password, @role)
       `);
   } catch (error) {
-    console.error('Registration failed:', error);
-    throw new Error('Failed to register user. Please try again later.');
+    console.error('Registration failed:', error.message);
+    throw new Error(error.message || 'Failed to register user. Please try again later.');
   }
 };
 
-exports.login = async ({ username, password }) => {
+
+exports.login = async ({ user_name, user_password }) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('user_name', sql.NVarChar, username)
+      .input('user_name', sql.NVarChar, user_name)
       .query(`SELECT * FROM UserDetails WHERE user_name = @user_name`);
 
     const user = result.recordset[0];
@@ -37,13 +48,13 @@ exports.login = async ({ username, password }) => {
       throw new Error('Username or Password is incorrect');
     }
 
-    const isMatch = await bcrypt.compare(password, user.user_password);
+    const isMatch = await bcrypt.compare(user_password, user.user_password);
     if (!isMatch) {
       throw new Error('Authentication failed, username or password is incorrect');
     }
 
     return jwt.sign(
-      { user_name: user.user_name, role: user.role },
+      { user_name: user.user_name, role: user.role,user_id: user.user_id },
       'authlogin',
       { expiresIn: '1h' }
     );
