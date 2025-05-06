@@ -85,7 +85,7 @@ export default function Header() {
               onChange={(e) => setQuery(e.target.value)}
               sx={{ flex: 1 }}
             />
-            <IconButton onClick={handleSearch} sx={IconStyle}>
+            <IconButton onClick={handleSearch} sx={IconStyle} aria-label="Search">
               <SearchIcon />
             </IconButton>
           </Paper>
@@ -101,12 +101,12 @@ export default function Header() {
               </Link>
             ))}
           </Box>
-          <IconButton aria-label="cart" onClick={handleClick}>
+          <IconButton aria-label="cart" onClick={handleClick} data-testid="CartIcon">
             <Badge badgeContent={cartCount}>
               <ShoppingCartIcon sx={IconStyle} />
             </Badge>
           </IconButton>
-          <LogoutIcon sx={IconStyle} onClick={handleLogout}>LOGOUT</LogoutIcon>
+          <LogoutIcon sx={IconStyle} onClick={handleLogout} data-testid="LogoutIcon">LOGOUT</LogoutIcon>
         </Toolbar>
       </AppBar>
     </Box>

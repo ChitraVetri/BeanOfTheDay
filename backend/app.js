@@ -13,7 +13,10 @@ var beanRoutes = require('./routes/beanRoutes'); // Import bean routes
 const userRoutes = require('./routes/userRoutes'); // Import user routes
 const cartRoutes = require('./routes/cartRoutes'); // Import cart routes
 var user
+
+
 var app = express();
+
 app.use(cors());
 app.use(bodyParser.json());
 

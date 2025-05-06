@@ -69,7 +69,7 @@ const BeanDetail = () => {
         <Typography variant="h5" sx={TypographyStyle}>Origin: {bean.Country}</Typography>
         <Typography variant="body1" sx={TypographyStyle}>{bean.Description || 'No description available.'}</Typography>
         <Typography variant="h6" sx={TypographyStyle}>Price: {bean.Cost}</Typography>
-        <Button variant="contained" sx={ButtonStyle} onClick={handleAddToCart}>
+        <Button variant="contained" sx={ButtonStyle} data-testid="AddToCart" onClick={handleAddToCart}>
           Add to Cart
         </Button>
       </Box>
