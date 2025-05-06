@@ -8,7 +8,7 @@ import { TypographyStyle, ButtonStyle, TextFieldStyle, IconStyle } from '../styl
 
 function Login() {
   const { login } = useAuth(); // Get login status and login function from context
-
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     user_name: "",
     user_password: "",
@@ -21,8 +21,20 @@ function Login() {
   function handleClick() {
     navigate("/signup")
   }
+
+  // Handle input change and clear error for that field
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Update formData
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Clear specific field error when user updates it
+    setErrors((prevErrors) => {
+      const newErrors = { ...prevErrors };
+      delete newErrors[name]; // Remove the error for the field being updated
+      return newErrors;
+    });
   };
 
   const handleClose = (event, reason) => {
@@ -30,24 +42,38 @@ function Login() {
     setOpen(false);
   };
 
+  // Form validation
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.user_name) newErrors.user_name = "Name is required";
+    if (!formData.user_password) {
+      newErrors.user_password = "Password is required";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/users/login`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(formData)
-    })
-
-    if (response.ok) {
-      const token = await response.text()
-      localStorage.setItem('jwtToken', token)
-      login()
-    }
-    else {
-      setMessage(`Error: ${response.statusText}`);
-      setOpen(true);
+    if (validate()) {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/users/login`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(formData)
+      })
+      
+      if (response.ok) {
+        const token = await response.text()
+        localStorage.setItem('jwtToken', token)
+        login()
+      }
+      else {
+        setMessage(`Error: ${response.statusText}`);
+        setOpen(true);
+      }
     }
   };
 
@@ -76,25 +102,29 @@ function Login() {
             margin="normal"
             required
             fullWidth
-            id="username"
+            id="user_name"
             label="User name"
-            name="username"
+            name="user_name"
             autoComplete="user_name"
             onChange={handleChange}
-            value={formData.username}
+            value={formData.user_name}
             sx={TextFieldStyle}
+            error={!!errors.user_name}
+            helperText={errors.user_name}
           />
           <TextField
             margin="normal"
             required
             fullWidth
-            name="password"
+            name="user_password"
             label="Password"
             type="password"
-            id="password"
+            id="user_password"
             autoComplete="current-password"
-            value={formData.password}
+            value={formData.user_password}
             onChange={handleChange}
+            error={!!errors.user_password}
+            helperText={errors.user_password}
             sx={TextFieldStyle}
           />
 

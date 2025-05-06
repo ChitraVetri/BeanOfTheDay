@@ -5,6 +5,7 @@ export const TypographyStyle = {
   color: '#2c2c2c', // dark text for light background
   textShadow: '0.5px 0.5px 1px rgba(255, 255, 255, 0.3)', // soft highlight
   fontFamily: 'serif',
+  userSelect: 'none', cursor: 'default'
 };
 
 export const ButtonStyle = {
@@ -49,7 +50,7 @@ export const IconStyle = {
   color: '#2c2c2c',
 };
 
-export const TextFieldStyle = {
+export const TextFieldStyle = {  
   '& .MuiOutlinedInput-root': {
     '&.Mui-focused fieldset': {
       borderColor: '#8cac89',

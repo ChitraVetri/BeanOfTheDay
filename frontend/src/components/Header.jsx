@@ -38,7 +38,7 @@ export default function Header() {
 
   function handleLogout() {
     logout()
-    navigate("/Login")
+    navigate("/")
   }
   const fetchTotalQuantity = (user) => async (dispatch) => {
     try {

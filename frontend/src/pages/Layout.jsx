@@ -10,23 +10,15 @@ import Login from "./Login";
 import Cart from "./Cart";
 import  { useAuth} from '../context/AuthContext';
 import React from 'react';
-import AddBeans from "./AddBeans";
 import SignUpForm from "./SignUp";
 import BeanDetail from "./BeanDetail";
 import BeanSearch from "../components/BeanSearch";
+import OrderSuccess from "./OrderForm";
 
 
 function Layout() {
-    const { isLoggedIn ,role} = useAuth(); // Get login status and role from context
-
-    // Protected Route based on role
-    const ProtectedRoute = ({ children, requiredRole }) => {
-        if (role === requiredRole) {
-            return children; // Render children (i.e., the component)
-        } else {
-            return <Navigate to="/Login" />; // Redirect to login if role doesn't match
-        }
-    };
+    const { isLoggedIn } = useAuth(); // Get login status and role from context
+    
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             {isLoggedIn ?
@@ -50,13 +42,10 @@ function Layout() {
                             <Route path="/Contact" element={<Contact />}></Route>
                             <Route path="/BeanDetails/:id" element={<BeanDetail/>}></Route>
                             <Route path="/SearchBeans" element={<BeanSearch/>}></Route>
+                            <Route path="/OrderForm" element={<OrderSuccess/>}></Route>
                             <Route path="/Shop" element={<BeanList />}></Route>
                             <Route path="/Login" element={<Login />}></Route>
-                            <Route path="/Cart" element={<Cart />}></Route>
-                            <Route path="/AddBeans" element={
-                                <ProtectedRoute requiredRole="admin">
-                                    <AddBeans /></ProtectedRoute>}
-                            />
+                            <Route path="/Cart" element={<Cart />}></Route>                            
                         </Routes>
                     </Container>
                     <Box sx={{ mt: 'auto' }}>

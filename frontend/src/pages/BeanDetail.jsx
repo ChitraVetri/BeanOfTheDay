@@ -33,7 +33,6 @@ const BeanDetail = () => {
 
     // Dispatch to Redux
     dispatch(addToCart(cartItem));
-
     // Persist to database
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/cart/updatecart`, cartItem);

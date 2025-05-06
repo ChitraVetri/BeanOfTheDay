@@ -8,7 +8,8 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null); // Store the decoded user info (if needed)
-    const [role, setRole] = useState(null); // Store the role of the user
+    const [userId, setUserId] = useState(null); // Store the user ID
+    
 
     // Check login status from localStorage on initial load
     useEffect(() => {        
@@ -16,7 +17,8 @@ export const AuthProvider = ({ children }) => {
         if (token) {
             const decoded = jwtDecode(token);
             setUser(decoded.user_name)
-            setRole(decoded.role); // Extract the role from the decoded token        
+            setUserId(decoded.user_id); // Extract the user ID from the decoded token  
+            
         }       
     }, []);
     
@@ -37,7 +39,7 @@ export const AuthProvider = ({ children }) => {
     const value = {
         isLoggedIn,
         user,
-        role,
+        userId,        
         login,
         logout,
     };

@@ -5,13 +5,29 @@ import { Link } from 'react-router-dom';
 import { TypographyStyle, ButtonStyle } from '../styles';
 
 export default function Home() {
+
+
     const [beans, setBeans] = useState([]);
 
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        axios.get(`${process.env.REACT_APP_API_URL}/beans/bean-of-the-day`).then(res => setBeans(res.data));
+        axios.get(`${process.env.REACT_APP_API_URL}/beans/bean-of-the-day`)
+            .then(res => {
+                setBeans(res.data);
+                setLoading(false);
+            })
+            .catch(err => {
+                setError("Failed to load bean of the day.");
+                setLoading(false);
+            });
     }, []);
 
+    if (loading) return <h2>Loading...</h2>;
+    if (error) return <p>{error}</p>;
+  
+    
     return (
         <Box
             sx={{
@@ -39,7 +55,7 @@ export default function Home() {
                     variant="h3"
                     sx={TypographyStyle}
                 >
-                    BEAN FOR THE DAY
+                    BEAN OF THE DAY
                 </Typography>
 
                 <Typography variant="h5" sx={TypographyStyle} >

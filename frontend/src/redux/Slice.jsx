@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import axios from 'axios';
 
 const cartsSlice = createSlice({
     name: "carts",
@@ -49,10 +50,25 @@ const cartsSlice = createSlice({
         },
         updateCartCount: (state, action) => {
             state.count = action.payload || 0;
+        },
+        setCartItems: (state, action) => {
+            state.productData = action.payload;
+            state.count = action.payload.reduce((total, item) => total + item.bean_quantity, 0);
         }
     }
 })
 
-export const { addToCart, removeFromCart,updateQuantity, updateCartCount } = cartsSlice.actions
+export const fetchCartItemsFromAPI = (user) => async (dispatch) => {
+    try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/cart/getcartdetails`, {
+            params: { user }
+        });
+        dispatch(setCartItems(res.data));
+    } catch (err) {
+        console.error("Failed to fetch cart items:", err);
+    }
+};
+
+export const { addToCart, removeFromCart,updateQuantity, updateCartCount,setCartItems } = cartsSlice.actions
 
 export default cartsSlice.reducer;

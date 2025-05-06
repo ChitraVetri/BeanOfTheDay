@@ -8,7 +8,7 @@ import {
   Grid,
 } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
-import { TypographyStyle,ButtonStyle,TextFieldStyle, IconStyle } from '../styles';
+import { TypographyStyle, ButtonStyle, TextFieldStyle } from '../styles';
 
 
 const SignUpForm = () => {
@@ -28,6 +28,12 @@ const SignUpForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear specific field error when user updates it
+    setErrors((prevErrors) => {
+      const newErrors = { ...prevErrors };
+      delete newErrors[name];
+      return newErrors;
+    });
   };
 
   // Form validation
@@ -48,21 +54,36 @@ const SignUpForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const [serverError, setServerError] = useState("");
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) {     
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/users/createuser`,{
-        method:"POST",
-        body:JSON.stringify(formData),
-        headers:{
-            "content-type":"application/json"
+    setServerError(""); // Clear any previous error
+    if (validate()) {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/users/createuser`, {
+          method: "POST",
+          body: JSON.stringify(formData),
+          headers: {
+            "content-type": "application/json"
+          }
+        })
+        if (response.ok) {
+          navigate('/')
+        } else {
+          const data = await response.json(); // parse error response
+          setServerError(data.message || 'An unexpected error occurred');
         }
-    })
-    if(response.ok){
-      navigate('/')
-  }    
-    }    
+      } catch (error) {
+        // Show server error to user
+        if (error.response && error.response.data) {
+          setServerError(error.response.data.message || "Registration failed");
+        } else {
+          setServerError("Something went wrong. Please try again.");
+        }
+      }
+    }
   };
 
   return (
@@ -79,8 +100,13 @@ const SignUpForm = () => {
         <Typography variant="h4" align="center" gutterBottom sx={TypographyStyle}>
           SIGN UP
         </Typography>
+        {serverError && (
+          <Typography color="error" sx={{ mt: 1 }}>
+            {serverError}
+          </Typography>
+        )}
         <form onSubmit={handleSubmit}>
-          <Grid container spacing={3} sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '40px', gap: '10px' }}>
+          <Grid container spacing={3} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '40px', gap: '10px' }}>
             <Grid item xs={12}>
               <TextField
                 fullWidth

@@ -1,83 +1,98 @@
-import {
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    Paper, Box, Breadcrumbs, Button, Typography, Divider, IconButton, TextField
-} from '@mui/material';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import axios from 'axios';
+import { Box, Breadcrumbs, Button, Divider, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { updateQuantity, removeFromCart } from '../redux/Slice'; // Make sure you import your cart actions
-import { TypographyStyle, ButtonStyle, TableStyle } from '../styles';
-import axios from '../api/axios';
-import { useAuth } from '../context/AuthContext';
-import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // Adjust to your path
+import { fetchCartItemsFromAPI } from '../redux/Slice'; // Adjust to your file structure
+import { ButtonStyle, TableStyle } from '../styles';
 
 const Cart = () => {
-
-    const { user } = useAuth(); // Get user info from context
+    const dispatch = useDispatch();
+    const { user, userId } = useAuth();
     const cartItems = useSelector(state => state.carts.productData);
-    const [tableData, setTableData] = useState([]);
 
     useEffect(() => {
-        console.log("user", user);
-        axios.get(`${process.env.REACT_APP_API_URL}/cart/getcartdetails`, {
-            params: { user }
-        })
-            .then(res => setTableData(res.data))
-            .catch(err => console.error('Failed to load carts:', err));
-    }, [user]);
-
-    const dispatch = useDispatch();
+        if (user) {
+            dispatch(fetchCartItemsFromAPI(user));
+        }
+    }, [user, dispatch]);
 
     const getTotalAmount = () => {
         return cartItems.reduce((total, item) => {
-            const numericCost = parseFloat(item.Cost.replace(/[£]/g, '')) || 0;
-            return total + numericCost * item.product_quantity;
+            const numericCost = parseFloat((item.bean_price || '0').replace(/[£]/g, '')) || 0;
+            return total + numericCost * item.bean_quantity;
         }, 0);
     };
 
-    const totalAmount = getTotalAmount().toFixed(2);
+    const totalamount = getTotalAmount().toFixed(2);
 
     const handleIncreaseQuantity = async (id) => {
-        const item = cartItems.find(item => item.Id === id);
+        const item = cartItems.find(i => i.bean_id === id);
         if (item) {
-            dispatch(updateQuantity({ id: item.Id, quantity: 1 }));
-
+            console.log("item", item);
             try {
                 await axios.put(`${process.env.REACT_APP_API_URL}/cart/updateQuantity`, {
-                    Id: item.Id,
-                    quantity: item.product_quantity + 1,
+                    Id: id,
+                    quantity: item.bean_quantity + 1,
+                    user: item.user_name
                 });
+                dispatch(fetchCartItemsFromAPI(user));
             } catch (error) {
-                console.error('Failed to increase quantity in DB:', error);
+                console.error('Failed to increase quantity:', error);
             }
         }
     };
 
-
     const handleDecreaseQuantity = async (id) => {
-        const item = cartItems.find(item => item.Id === id);
-        if (item && item.product_quantity > 1) {
-            dispatch(updateQuantity({ id: item.Id, quantity: -1 }));
-
+        const item = cartItems.find(i => i.bean_id === id);
+        if (item && item.bean_quantity > 1) {
             try {
-                await axios.put(`${process.env.REACT_APP_API_URL}/cart/updatecart`, {
-                    Id: item.Id,
-                    quantity: item.product_quantity - 1,
+                await axios.put(`${process.env.REACT_APP_API_URL}/cart/updateQuantity`, {
+                    Id: id,
+                    quantity: item.bean_quantity - 1,
+                    user
                 });
+                dispatch(fetchCartItemsFromAPI(user));
             } catch (error) {
-                console.error('Failed to decrease quantity in DB:', error);
+                console.error('Failed to decrease quantity:', error);
             }
         }
     };
 
     const handleRemoveItem = async (id) => {
-        dispatch(removeFromCart(id));
         try {
-            await axios.delete(`${process.env.REACT_APP_API_URL}/cart/delete/${id}`, {
-                params: { user }
+            console.log("id", id)
+            console.log("user", user)
+            await axios.delete(`${process.env.REACT_APP_API_URL}/cart/deletecart`, {
+                data: {
+                    beanId: id,
+                    user: user
+                }
             });
+            dispatch(fetchCartItemsFromAPI(user));
         } catch (error) {
-            console.error('Failed to remove item from DB cart:', error);
+            console.error('Failed to delete item:', error);
+        }
+    };
+    const navigate = useNavigate();
+    const handleCheckout = async () => {
+        if (cartItems.length === 0) {
+            alert("Please add items to your cart before checking out.");
+            return;
+        }
+        try {
+            const orderData = {
+                userId: userId,
+                items: cartItems,
+                total: totalamount
+            };
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/beans/create-order`, orderData);
+            dispatch(fetchCartItemsFromAPI(user));
+            navigate('/OrderForm', { state: { order: response.data } });
+        } catch (error) {
+            console.error('Order placement failed:', error);
         }
     };
 
@@ -100,25 +115,23 @@ const Cart = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {tableData.map(item => {
-                            const price = parseFloat(item.bean_price.replace(/[£]/g, ''))  || 0;
+                        {cartItems.map(item => {
+                            const price = parseFloat((item.bean_price || '0').replace(/[£]/g, '')) || 0;
                             const total = (price * item.bean_quantity).toFixed(2);
                             return (
                                 <TableRow key={item.bean_id}>
                                     <TableCell>{item.bean_name}</TableCell>
                                     <TableCell>{item.bean_price}</TableCell>
                                     <TableCell>
-                                        <IconButton onClick={() => handleDecreaseQuantity(item.Id)} disabled={item.bean_quantity <= 1}>
+                                        <IconButton onClick={() => handleDecreaseQuantity(item.bean_id)} disabled={item.bean_quantity <= 1}>
                                             <RemoveIcon />
                                         </IconButton>
                                         <TextField
                                             value={item.bean_quantity}
-                                            onChange={(e) =>
-                                                dispatch(updateQuantity({ id: item.bean_id, quantity: parseInt(e.target.value) || 1 }))
-                                            }
                                             type="number"
                                             size="small"
-                                            sx={{ width: 50, mx: 1 }}
+                                            disabled
+                                            sx={{ width: 70, mx: 1 }}
                                         />
                                         <IconButton onClick={() => handleIncreaseQuantity(item.bean_id)}>
                                             <AddIcon />
@@ -126,7 +139,7 @@ const Cart = () => {
                                     </TableCell>
                                     <TableCell>£{total}</TableCell>
                                     <TableCell align="center">
-                                        <IconButton onClick={() => handleRemoveItem(item.Id)}>
+                                        <IconButton onClick={() => handleRemoveItem(item.bean_id)}>
                                             <DeleteIcon color="error" />
                                         </IconButton>
                                     </TableCell>
@@ -139,9 +152,9 @@ const Cart = () => {
 
             <Divider sx={{ my: 3 }} />
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 4 }}>
-                <Typography variant="h6" sx={TypographyStyle}>Total Amount: £{totalAmount}</Typography>
-                <Button variant="contained" color="primary" sx={ButtonStyle}>Proceed to Checkout</Button>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Typography variant="h6">Total Amount: £{totalamount}</Typography>
+                <Button variant="contained" color="primary" onClick={handleCheckout} sx={ButtonStyle}>Proceed to Checkout</Button>
             </Box>
         </Box>
     );

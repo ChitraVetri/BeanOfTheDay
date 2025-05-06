@@ -8,19 +8,31 @@ import Pagination from '@mui/material/Pagination';
 export default function BeanList() {
     const [beans, setBeans] = useState([]);
 
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 8; // Adjust per your grid layout    
 
     useEffect(() => {
         axios.get(`${process.env.REACT_APP_API_URL}/beans/getAllBeans`)
-            .then(res => setBeans(res.data))
-            .catch(err => console.error('Failed to load beans:', err));
+            .then(res => {
+                setBeans(res.data);
+                setLoading(false);
+            })
+            .catch(err => {
+                setError("Failed to load beans.");
+                setLoading(false);
+            });
     }, []);
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentBeans = beans.slice(indexOfFirstItem, indexOfLastItem);
-    
+
+    if (loading) return <h1>Loading...</h1>;
+    if (error) return <p>{error}</p>;
+
     return (
         <>
             <Box sx={{
