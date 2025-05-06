@@ -5,7 +5,7 @@ exports.registerUser = async (req, res) => {
         await userService.register(req.body);
         res.json({ message: "User successfully registered" });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(400).json({ message: err.message });
     }
 };
 

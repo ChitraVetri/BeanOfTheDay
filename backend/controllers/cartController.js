@@ -3,7 +3,6 @@ const cartService = require('../services/cartService');
 exports.getCartDetails = async (req, res) => {
     try {
         const user = req.query.user?.trim();
-        console.log('User:', user); // Log the user for debugging
         const result = await cartService.getAll(user);
         res.json(result);
     } catch (err) {
@@ -30,12 +29,12 @@ exports.updateCart = async (req, res) => {
 };
 exports.updateQuantity = async (req, res) => {
     try {
-        const { Id, quantity } = req.body;
+        const { Id, quantity, user } = req.body;
         if (!Id || quantity < 1) {
             return res.status(400).json({ error: 'Invalid input' });
         }
 
-        await cartService.updateQuantity(Id, quantity);
+        await cartService.updateQuantity(Id, quantity, user);
         res.status(200).json({ message: 'Quantity updated successfully' });
     } catch (err) {
         console.error('Error in updateQuantity controller:', err);
@@ -55,7 +54,8 @@ exports.getTotalQuantity = async (req, res) => {
 
 exports.deleteCartItem = async (req, res) => {
     try {
-        const result = await cartService.delete(req.params.Id, req.params.user);
+        const { user, beanId } = req.body;
+        const result = await cartService.delete(beanId, user);
         if (!result) {
             return res.status(404).json({ message: 'Product not found' });
         }

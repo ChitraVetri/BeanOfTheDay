@@ -44,18 +44,13 @@ exports.searchBeans = async (req, res) => {
   }
 };
 
-exports.placeOrder = async (req, res) => {
+exports.createOrder = async (req, res) => {
   try {
-    const { name, address, bean } = req.body;
-    if (!name || !address || !bean) {
-      return res.status(400).json({ error: 'All fields are required.' });
-    }
-
-    // Simulate DB insert (replace with actual DB insert)
-    console.log('Received order:', req.body);
-    res.status(201).json({ message: 'Order placed successfully!' });
-  } catch (err) {
-    console.error('Error in placeOrder:', err);
-    res.status(500).json({ error: 'Failed to place order.' });
+      const { userId, items, total } = req.body;
+      const result = await beanService.createOrder(userId, items, total);
+      res.status(201).json(result);
+  } catch (error) {
+      console.error('Error in orderController:', error);
+      res.status(500).json({ message: 'Failed to place order' });
   }
 };
