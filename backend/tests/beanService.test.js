@@ -1,4 +1,4 @@
-const { poolPromise } = require('../models/beanModel');
+const { poolPromise, sql } = require('../models/beanModel');
 const beanService = require('../services/beanService');
 
 // Mock the pool and request chain
@@ -8,31 +8,7 @@ const mockRequest = jest.fn(() => ({ input: mockInput, query: mockQuery }));
 //const mockPool = { request: mockRequest };
 
 // Mock poolPromise to return the mock pool
-jest.mock('../mocks/beanModel', () => {
-    const originalModule = jest.requireActual('../models/beanModel');
-    return {
-        ...originalModule,
-        poolPromise: Promise.resolve({ request: mockRequest }),
-        sql: {
-            VarChar: 'VarChar',
-            NVarChar: 'NVarChar',
-            Int: 'Int',
-            Decimal: () => 'Decimal',
-            Date: 'Date',
-            Transaction: jest.fn().mockImplementation(() => ({
-                begin: jest.fn(),
-                commit: jest.fn(),
-                rollback: jest.fn(),
-                request: jest.fn(() => ({
-                    input: jest.fn().mockReturnThis(),
-                    query: jest.fn(),
-                })),
-            }))
-        },
-    };
-});
-
-
+jest.mock('../mocks/beanModel');
 
 describe('Bean Service', () => {
     beforeEach(() => {
@@ -63,6 +39,56 @@ describe('Bean Service', () => {
         const result = await beanService.getBeanById(beanId);
         expect(result).toEqual(mockBean);
     });
+    test('search beans returning matching beans', async () => {
+        const searchTerm = 'Arabica';
+        const mockBeans = [{ Id: '1', Name: 'Arabica' }, { Id: '2', Name: 'Robusta' }];
+        const pool = await poolPromise;
+        pool.request = jest.fn(() => ({
+            input: jest.fn().mockReturnThis(),
+            query: jest.fn().mockResolvedValue({ recordset: mockBeans })
+        }));
+
+        const result = await beanService.searchBeans(searchTerm);
+        expect(result).toEqual(mockBeans);
+    });
+    test('createOrder should insert order and items', async () => {
+        const pool = await poolPromise;
+
+        const beginMock = jest.fn();
+        const commitMock = jest.fn();
+        const rollbackMock = jest.fn();
+        const inputMock = jest.fn().mockReturnThis();
+        const queryMock = jest.fn()
+            .mockResolvedValueOnce({ recordset: [{ Id: 1 }] }) // insert order
+            .mockResolvedValue(); // insert items and delete from cart
+
+        // Mock the transaction and pool
+        const transactionMock = {
+            begin: beginMock,
+            commit: commitMock,
+            rollback: rollbackMock,
+            request: jest.fn(() => ({ input: inputMock, query: queryMock }))
+        };
+
+        // Replace sql.Transaction with a mock that returns our transaction
+        sql.Transaction = jest.fn(() => transactionMock);
+
+        const result = await beanService.createOrder('user123', [
+            { bean_id: 'b1', bean_name: 'Arabica', bean_quantity: 2, bean_price: '10', user_name: 'user123' }
+        ], 20);
+
+        expect(beginMock).toHaveBeenCalled();
+        expect(commitMock).toHaveBeenCalled();
+        expect(result).toEqual({
+            orderId: 1,
+            userId: 'user123',
+            items: [
+                { bean_id: 'b1', bean_name: 'Arabica', bean_quantity: 2, bean_price: '10', user_name: 'user123' }
+            ],
+            total: 20
+        });
+    });
+
 });
 
 describe('getBeanOfTheDay', () => {
