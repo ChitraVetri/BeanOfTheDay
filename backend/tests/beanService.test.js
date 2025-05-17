@@ -63,37 +63,6 @@ describe('Bean Service', () => {
         const result = await beanService.getBeanById(beanId);
         expect(result).toEqual(mockBean);
     });
-
-
-    //     const mockTransaction = {
-    //         begin: jest.fn(),
-    //         commit: jest.fn(),
-    //         rollback: jest.fn(),
-    //         request: jest.fn(() => ({
-    //             input: jest.fn().mockReturnThis(),
-    //             query: jest.fn()
-    //         }))
-    //     };
-
-    //     sql.Transaction.mockImplementation(() => mockTransaction);
-
-    //     mockTransaction.request().query
-    //         .mockResolvedValueOnce({ recordset: [{ Id: 101 }] }) // Insert order
-    //         .mockResolvedValueOnce({}) // Insert order item
-    //         .mockResolvedValueOnce({}); // Delete from cart
-
-    //     const result = await beanService.createOrder('user123', [{
-    //         bean_id: 'B1',
-    //         bean_name: 'Test Bean',
-    //         bean_quantity: 2,
-    //         bean_price: '£10',
-    //         user_name: 'user123'
-    //     }], 20.0);
-
-    //     expect(result.orderId).toBe(101);
-    //     expect(result.total).toBe(20.0);
-    //     expect(mockTransaction.commit).toHaveBeenCalled();
-    // });
 });
 
 describe('getBeanOfTheDay', () => {
